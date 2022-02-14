@@ -361,6 +361,6 @@ zsdoc/data
 !/tests/_output/.gitkeep
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,visualstudiocode,vim,macos,linux,zsh
-./node_modules
-./config
-./package-lock.json
+node_modules
+config
+package-lock.json
