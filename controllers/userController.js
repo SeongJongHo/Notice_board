@@ -49,14 +49,20 @@ module.exports = {
 
             const hashPassword= await bcrypt.compare(req.body.password, user.password)
             if(hashPassword){
-                return res.status(400).json({
-                    message: 'SUCCESS',
-                    token: jwt.sign({id: user.id }, SECRET_KEY, {algorithm:ALGORITHM})
+                const refersh_token= jwt.sign({}, SECRET_KEY, {algorithm:ALGORITHM})
+                user.refersh_token= refersh_token
+                user.save(result=>{
+                    if(result){
+                        return res.status(400).json({
+                            message: 'SUCCESS',
+                            token: jwt.sign({id: user.id }, SECRET_KEY, {algorithm:ALGORITHM}),
+                            refersh_token: refersh_token
+                        })
+                    }
                 })
             }
-            else{
-                throw new Error('INVALID_PASSWORD')
-            }
+            else throw new Error('INVALID_PASSWORD')
+            
         }
         catch (e){
             return res.status(400).json({message: e.message})

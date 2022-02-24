@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const UserCtrl = require('../controllers/userController');
+const Certification = require('../core/userCertification');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
