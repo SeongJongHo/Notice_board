@@ -28,10 +28,9 @@ module.exports = {
                 password: await bcrypt.hash(req.body.password, 12),
                 phone_number: req.body.phone_number
             }).then(result=>{
-                if(result) res.status(201).json({message: 'CREATED', result: result})
-                
+                if(result) return res.status(201).json({message: 'CREATED', result: result})
             }).catch(err=>{
-                if(err) throw new Error("NOT_CREATED")
+                return res.status(400).json({message: err.message})
             })
 
         }
@@ -46,12 +45,12 @@ module.exports = {
 
             const user= await db.User.findOne({where: {username: req.body.username}})
             if(!user) throw new Error('INVALID_USERNAME')
-
+     
             const hashPassword= await bcrypt.compare(req.body.password, user.password)
             if(hashPassword){
                 const refersh_token= jwt.sign({}, SECRET_KEY, {algorithm:ALGORITHM})
                 user.refersh_token= refersh_token
-                user.save(result=>{
+                await user.save().then(result=>{
                     if(result){
                         return res.status(400).json({
                             message: 'SUCCESS',
@@ -108,4 +107,85 @@ module.exports = {
             return res.status(400).json({message: err.message})
         }
     },
+    addFollow: async(req, res)=>{
+        try{
+            if(!req.body.username) throw new Error('KEYERROR_USERNAME')
+
+            const follwer = await db.User.findOne({where: {username: req.body.username}})
+            if(!follwer) throw new Error('INVALID_FOLLWER_USERNAME')
+
+            const follow_status= await db.Follow.findOne({where: {followee_id: follwer.id, follower_id: req.user}})
+            if(follow_status){
+                follow_status.destroy().then(result=>{
+                    if(result) return res.status(200).json({message: 'UNFOLLOW'})
+                })
+            }
+            else{
+                db.Follow.create({
+                    followee_id: follwer.id,
+                    follower_id: req.user
+                }).then(result=>{
+                    if(result) return res.status(200).json({message: 'FOLLOW'})
+                })
+            }
+        }
+        catch(err){
+            return res.status(400).json({message: err.message})
+        }
+    },
+    getFollow: (req, res)=>{
+        db.Follow.findAll({
+            attributes:['id','followee_id','follower_id'],
+            include:[{
+                model: db.User,
+                where: {
+                    id: db.Sequelize.literal('followee_id')
+                },
+            }],
+            where: { 
+                follower_id: req.user 
+            },
+        }).then(result=>{
+            return res.status(200).json({message: 'SUCCESS', result: result})
+        }).catch(err=>{
+            return res.status(400).json({message: err.message})
+        })
+    },
+    getFollower: async(req, res)=>{
+        const follows= await db.Follow.findAll({
+            where: { 
+                followee_id: req.user 
+            },
+            include: {
+                where: {
+                    id: db.Sequelize.literal('follower_id')
+                },
+                model: db.User,
+                required: false,
+                as: 'follower',
+                include: {
+                    required: false,
+                    model: db.Follow,
+                    where:{
+                        follower_id: req.user,
+                        followee_id: db.Sequelize.literal('Follow.follower_id')
+                    }
+                }
+            }
+        }).catch(err=>{
+            return res.status(400).json({message: err.message})
+        })
+        return res.status(200).json({
+            message: 'SUCCESS',
+            result: await follows.map(result=>{
+                return {
+                    id: result.id,
+                    followee_id: result.followee_id,
+                    follower_id: result.follower_id,
+                    follower_nickname: result.follower.username,
+                    follow_status: result.follower.Follows[0]? true:false
+                }
+            })
+        })
+    }
 }

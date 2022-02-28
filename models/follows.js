@@ -45,7 +45,7 @@ module.exports = class Follow extends Sequelize.Model {
         )
     }
     static associate(db){
-        this.belongsTo(db.User, {foreignKey: "follower_id", onDelete: 'cascade', targetKey: 'id'})
-        this.belongsTo(db.User, {foreignKey: "followee_id", onDelete: 'cascade', targetKey: 'id'})
+        this.belongsTo(db.User, {as:"follower",foreignKey: "follower_id", onDelete: 'cascade', targetKey: 'id'})
+        this.belongsTo(db.User, {as:"follow",foreignKey: "followee_id", onDelete: 'cascade', targetKey: 'id'})
     }
 }
