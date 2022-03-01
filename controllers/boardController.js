@@ -1,21 +1,51 @@
 const db= require('../models')
 
 module.exports = {
-    addBoard: (req, res)=>{
+    addBoard: async(req, res)=>{
+        const t= await db.sequelize.transaction();
         try{
             if(!req.body.title || !req.body.content) throw new Error('KEYERROR_BOARD_TITLE_AND_CONTENT')
-            
-            db.Board.create({
+
+            const board= await db.Board.create({
                 title: req.body.title,
                 content: req.body.content,
                 user_id: req.user
-            }).then(result =>{
-                if(result) return res.status(201).json({message: 'SUCCESS', result: result})
-            }).catch(()=>{
-                return res.status(400).json({message: 'NOT_CREATED'})
+            },
+            {transaction: t})
+                .catch(()=>{
+                throw new Error('NOT_CREATED_BOARD')
             })
+
+            if(req.body.tag[0]){
+                const tagList= []
+                for (i=0;i<req.body.tag.length;i++){
+                    await db.Tag.findOrCreate({ 
+                        where: {name: req.body.tag[i]},
+                        defaults: {name: req.body.tag[i]},
+                        transaction: t
+                    }).then(([result, created])=>{                        
+                        tagList.push(result.id)
+                    })
+                }
+                
+                const boardTag= tagList.map(result=>(
+                    {
+                        board_id: board.id,
+                        tag_id: result,
+                    }
+                ))
+                await db.BoardTag.bulkCreate(boardTag,{transaction:t})
+                    .catch(()=>{
+                        throw new Error('NOT_CREATED_BOARDTAG')
+                    })
+            }
+            t.commit().then(()=>{
+                return res.status(201).json({message: 'SUCCESS'})
+            });
+            
         }
         catch(e){
+            await t.rollback()
             return res.status(400).json({message: e.message})
         }
     },

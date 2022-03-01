@@ -10,7 +10,7 @@ module.exports = class Tag extends Sequelize.Model {
                 primaryKey: true
             },
             name: {
-                type: Sequelize.BIGINT,
+                type: Sequelize.STRING,
                 allowNull: false,
                 unique: true,
             },
