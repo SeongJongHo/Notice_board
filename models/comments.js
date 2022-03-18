@@ -24,7 +24,6 @@ module.exports = class Comment extends Sequelize.Model {
             parent_id: {
                 type: Sequelize.BIGINT,
                 allowNull: true,
-                defaultValue: 0
             },
             create_at: {
                 type: Sequelize.DATE,
@@ -50,7 +49,7 @@ module.exports = class Comment extends Sequelize.Model {
     static associate(db){
         this.belongsTo(db.Board, {foreignKey: "board_id", onDelete: 'cascade', targetKey: 'id'})
         this.belongsTo(db.User, {foreignKey: "user_id", onDelete: 'cascade', targetKey: 'id'})
-        this.belongsTo(db.Comment, {foreignKey: "parent_id", onDelete: 'cascade', targetKey: 'id'})
+        this.belongsTo(db.Comment, {foreignKey: "parent_id", targetKey: 'id'})
         this.hasMany(db.Comment, {foreignKey: "parent_id", onDelete: 'cascade', sourceKey: 'id'})
 
 
