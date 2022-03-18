@@ -31,7 +31,6 @@ module.exports= {
                 order: [['create_at','desc']],
                 limit: req.query.limit? req.query.limit:100,
                 offset: req.query.offset? req.query.offset:0,
-                // attributes: [[db.sequelize.fn('COUNT', 'id'), 'commentCount']],
             }).then(result=>{
                 return res.status(200).json({
                     message: 'SUCCESS',
