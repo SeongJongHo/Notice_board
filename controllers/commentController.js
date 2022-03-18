@@ -27,7 +27,7 @@ module.exports= {
         try{
             if(!req.params.id) throw new Error('KEYERROR_id')
             
-            await db.Comment.findAll({
+            await db.Comment.findAndCountAll({
                 order: [['create_at','desc']],
                 limit: req.query.limit? req.query.limit:100,
                 offset: req.query.offset? req.query.offset:0,
