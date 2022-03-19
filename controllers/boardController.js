@@ -1,5 +1,5 @@
 const db= require('../models')
-const board_count= require('../core/boardCount')
+const board_count= require('../core/redis')
 module.exports = {
     addBoard: async(req, res)=>{
         const t= await db.sequelize.transaction();

@@ -7,6 +7,7 @@ const db = require('./models');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const scheduler = require('./core/cron').boardCountInit
 
 const app = express();
 
@@ -20,11 +21,13 @@ db.sequelize.sync({force:false})
   })
 
 //redis 연결
-
 const client = db.redis
 client.connect()
 client.on('error', (err) => console.log('레디스 레디 실패^^'));
 client.on("ready", ()=> console.log('레디스 레디 완^^'));
+
+//스케줄러 작동
+scheduler();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
