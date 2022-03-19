@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const db = require('./models').sequelize;
+const db = require('./models');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -11,13 +11,20 @@ const usersRouter = require('./routes/users');
 const app = express();
 
 // db 연결
-db.sync({force:false})
+db.sequelize.sync({force:false})
   .then(()=>{
     console.log("db 연결 성공")
   })
   .catch(()=>{
     console.log("db 연결 실패")
   })
+
+//redis 연결
+
+const client = db.redis
+client.connect()
+client.on('error', (err) => console.log('레디스 레디 실패^^'));
+client.on("ready", ()=> console.log('레디스 레디 완^^'));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

@@ -1,5 +1,5 @@
 const db= require('../models')
-
+const board_count= require('../core/boardCount')
 module.exports = {
     addBoard: async(req, res)=>{
         const t= await db.sequelize.transaction();
@@ -60,32 +60,31 @@ module.exports = {
                 return res.status(200).json({message: 'SUCCESS', result: result})
         })
     },
-    getBoard: (req, res)=>{
+    getBoard: async(req, res)=>{
         try{
-            if(!req.params.id) throw new Error('KEYERROR_id')
-
-            db.Board.findOne({
+            if(!req.params.id||
+               !req.query.ip) throw new Error('KEYERROR')
+            
+            const ipcheck = await board_count.ipExist(req.params.id, req.query.ip)   
+            await db.Board.findOne({
                 where:{id: req.params.id},
-                attributes: ['title', 'content'],
+                attributes: ['id','title', 'content','count'],
                 include: {
                     model: db.User,
                     attributes: ['nickname', 'username']
-                },
-                include: {
-                    model: db.Comment,
-                    where:{
-                        board_id: req.params.id,
-                        order: [['create_at','desc']],
-                        limit: req.query.limit? req.query.limit:50,
-                        offset: req.query.offset? req.query.offset:0
-                    }
                 }
-            }).then(result=>{
-                    if(result){
-                        return res.status(200).json({message: 'SUCCESS', result: result})
-                    }
-                    return res.status(404).json({message: 'INVALID_BOARD'})
-                })
+            }).then(async board=>{
+                if(ipcheck==false){
+                     board.count += 1;
+                     await board.save();
+                     await board_count.addIP(req.params.id, req.query.ip)
+               }
+               return res.status(200).json({message: 'SUCCESS', result: board})
+            }).catch(()=>{
+                throw new Error('BOARD_DB_ERROR')
+            })
+            
+
         }catch(e){
             return res.status(400).json({message: e.message})
         }

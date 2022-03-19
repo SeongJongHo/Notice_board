@@ -11,6 +11,7 @@ router.get('/', function(req, res, next) {
 
 /* Board */
 router.post('/board', Certification.login_required, BoardCtrl.addBoard)
+router.get('/board/:id', BoardCtrl.getBoard)
 
 /* Comment */
 router.get('/comment/:id', Certification.login_required, CommnetCtrl.getComment)

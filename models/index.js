@@ -18,7 +18,8 @@ const db = {
   Tag       : require('./tags'),
   User      : require('./users'),
   sequelize : sequelize,
-  Sequelize : Sequelize
+  Sequelize : Sequelize,
+  redis     : require('redis').createClient()
 };
 
 db.BoardTag.init(sequelize)

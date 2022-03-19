@@ -50,6 +50,6 @@ module.exports = class Board extends Sequelize.Model {
     static associate(db){
         this.belongsTo(db.User, {foreignKey: "user_id", onDelete: 'cascade', targetKey: 'id'})
         this.hasMany(db.BoardTag, {foreignKey: "board_id", onDelete: 'cascade', sourceKey: 'id'})
-
+        this.hasMany(db.Comment, {foreignKey: "board_id", onDelete: 'cascade', sourceKey: 'id'})
     }
 }
