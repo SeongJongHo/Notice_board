@@ -3,7 +3,7 @@ const db= require('../models')
 module.exports= {
     addComment: async(req, res)=>{
         try {
-            if(!req.body.content || !req.body.board_id) throw new Error('KEYERROR')
+            if(!req.body.content || !req.body.board_id) throw({message: 'KEYERROR', status: 400 })
 
             await db.Comment.create({
                 board_id: req.body.board_id,
@@ -16,16 +16,16 @@ module.exports= {
                     result: result    
                 })
             }).catch(()=>{
-                throw new Error("NOT_CREATED")
+                throw({message: 'NOT_CREATED', status: 400 })
             })
         }
         catch(e){
-            return res.status(400).json({message: e.message})
+            return res.status(e.status || 400).json({message: e.message})
         }
     },
     getComment: async(req, res)=>{
         try{
-            if(!req.params.id) throw new Error('KEYERROR_id')
+            if(!req.params.id) throw({message: 'KEYERROR_id', status: 400 })
             
             await db.Comment.findAndCountAll({
                 order: [['create_at','desc']],
@@ -37,11 +37,11 @@ module.exports= {
                     result: result
                 })
             }).catch(err=>{
-                throw new Error('COMMENT_FIND_ERROR')
+                throw({message: 'COMMENT_FIND_ERROR', status: 400 })
             })
         }
         catch(e){
-            return res.status(400).json({message: e.message})
+            return res.status(e.status || 400).json({message: e.message})
         }
     }
 }
