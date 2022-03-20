@@ -15,13 +15,13 @@ module.exports = {
             !req.body.username     ||   
             !req.body.password     ||     
             !req.body.phone_number  
-            ) { throw new Error("KEY_ERROR") }
+            ) { throw({message: 'KEYERROR', status: 400 }) }
 
             validates_email(req.body.email)
             validates_password(req.body.password)
             validates_username(req.body.username) 
             
-            db.User.create({
+            await db.User.create({
                 nickname: req.body.nickname,
                 email: req.body.email,
                 username: req.body.username,
@@ -30,21 +30,21 @@ module.exports = {
             }).then(result=>{
                 if(result) return res.status(201).json({message: 'CREATED', result: result})
             }).catch(err=>{
-                return res.status(400).json({message: err.message})
+                throw({message: 'NOT_CREATED', status: 400 })
             })
 
         }
         catch (e){
-            return res.status(400).json({message: e.message})
+            return res.status(e.status || 400).json({message: e.message})
         }
     },
     signIn: async(req, res)=>{
         try{
             if(!req.body.username || !req.body.password)
-                { throw new Error("KEY_ERROR") }
+                { throw({message: 'KEYERROR', status: 400 }) }
 
             const user= await db.User.findOne({where: {username: req.body.username}})
-            if(!user) throw new Error('INVALID_USERNAME')
+            if(!user) throw({message: 'INVALID_USERNAME', status: 400 })
      
             const hashPassword= await bcrypt.compare(req.body.password, user.password)
             if(hashPassword){
@@ -60,21 +60,21 @@ module.exports = {
                     }
                 })
             }
-            else throw new Error('INVALID_PASSWORD')
+            else throw({message: 'INVALID_PASSWORD', status: 400 })
             
         }
         catch (e){
-            return res.status(400).json({message: e.message})
+            return res.status(e.status || 400).json({message: e.message})
         }
     },
-    checkEmail: (req, res)=>{
+    checkEmail: async(req, res)=>{
         try{
-            if(!req.body.email) throw new Error('KEYERROR_EMAIL')
+            if(!req.body.email) throw({message: 'KEYERROR_EMAIL', status: 400 })
             
-            db.User.findOne({where: {email: req.body.email}})
+            await db.User.findOne({where: {email: req.body.email}})
                 .then(result=> {
                     if(result){
-                        throw new Error('EMAIL_EXIST')
+                        throw({message: 'EMAIL_EXIST', status: 400 })
                     }
                     else{
                         return res.status(200).json({message: 'EMAIL_NOT_EXIST'})
@@ -84,17 +84,17 @@ module.exports = {
                     return res.status(200).json({message: 'EMAIL_NOT_EXIST'})
                 })
         }catch(err){
-            return res.status(400).json({message: err.message})
+            return res.status(e.status || 400).json({message: err.message})
         }
     },
-    checkUsername: (req, res)=>{
+    checkUsername: async(req, res)=>{
         try{
-            if(!req.body.username) throw new Error('KEYERROR_USERNAME')
+            if(!req.body.username) throw({message: 'KEYERROR_USERNAME', status: 400 })
 
-            db.User.findOne({where: {username: req.body.username}})
+            await db.User.findOne({where: {username: req.body.username}})
                 .then(result=>{
                     if(result){
-                        throw new Error('USERNAME_EXIST')
+                        throw({message: 'USERNAME_EXIST', status: 400 })
                     }
                     else{
                         return res.status(200).json({message: 'USERNAME_NOT_EXIST'})
@@ -104,15 +104,15 @@ module.exports = {
                     return res.status(200).json({message: 'USERNAME_NOT_EXIST'})
                 })
         }catch(err){
-            return res.status(400).json({message: err.message})
+            return res.status(e.message || 400).json({message: err.message})
         }
     },
     addFollow: async(req, res)=>{
         try{
-            if(!req.body.username) throw new Error('KEYERROR_USERNAME')
+            if(!req.body.username) throw({message: 'KEYERROR_USERNAME', status: 400 })
 
             const follwer = await db.User.findOne({where: {username: req.body.username}})
-            if(!follwer) throw new Error('INVALID_FOLLWER_USERNAME')
+            if(!follwer) throw({message: 'INVALID_FOLLWER_USERNAME', status: 400 })
 
             const follow_status= await db.Follow.findOne({where: {followee_id: follwer.id, follower_id: req.user}})
             if(follow_status){
@@ -130,7 +130,7 @@ module.exports = {
             }
         }
         catch(err){
-            return res.status(400).json({message: err.message})
+            return res.status(e.status || 400).json({message: err.message})
         }
     },
     getFollow: (req, res)=>{
