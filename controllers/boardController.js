@@ -4,7 +4,7 @@ module.exports = {
     addBoard: async(req, res)=>{
         const t= await db.sequelize.transaction();
         try{
-            if(!req.body.title || !req.body.content) throw new Error('KEYERROR_BOARD_TITLE_AND_CONTENT')
+            if(!req.body.title || !req.body.content) throw ({message: 'KEYERROR_BOARD_TITLE_AND_CONTENT', status: 400 })
 
             const board= await db.Board.create({
                 title: req.body.title,
@@ -13,7 +13,7 @@ module.exports = {
             },
             {transaction: t})
                 .catch(()=>{
-                throw new Error('NOT_CREATED_BOARD')
+                throw({message: 'NOT_CREATED_BOARD', status: 400 })
             })
 
             if(req.body.tag[0]){
@@ -36,7 +36,7 @@ module.exports = {
                 ))
                 await db.BoardTag.bulkCreate(boardTag,{transaction:t})
                     .catch(()=>{
-                        throw new Error('NOT_CREATED_BOARDTAG')
+                        throw({message: 'NOT_CREATED_BOARDTAG', status: 400 })
                     })
             }
             t.commit().then(()=>{
@@ -46,7 +46,7 @@ module.exports = {
         }
         catch(e){
             await t.rollback()
-            return res.status(400).json({message: e.message})
+            return res.status(e.status || 400).json({message: e.message})
         }
     },
     getBoards: (req, res)=>{
@@ -63,7 +63,7 @@ module.exports = {
     getBoard: async(req, res)=>{
         try{
             if(!req.params.id||
-               !req.query.ip) throw new Error('KEYERROR')
+               !req.query.ip) throw({message: 'KEYERROR', status: 400})
             
             const ipcheck = await board_count.ipExist(req.params.id, req.query.ip)   
             await db.Board.findOne({
@@ -81,12 +81,12 @@ module.exports = {
                }
                return res.status(200).json({message: 'SUCCESS', result: board})
             }).catch(()=>{
-                throw new Error('BOARD_DB_ERROR')
+                throw({message: 'BOARD_DB_ERROR', status: 400 })
             })
             
 
         }catch(e){
-            return res.status(400).json({message: e.message})
+            return res.status(e.status || 400).json({message: e.message})
         }
     }
 }
