@@ -6,12 +6,12 @@ const ALGORITHM= require('../config/config.js').ALGORITHM;
 module.exports= {
     login_required: async(req, res, next)=>{
         try{
-            if(!req.headers.authorization) throw new Error('KEY_ERROR_AUTHORIZATION')
+            if(!req.headers.authorization) throw ({message:'KEY_ERROR_AUTHORIZATION', status: 400})
 
             const payload = {}
             jwt.verify(req.headers.authorization, SECRET_KEY, ALGORITHM,
                 (err, decoded)=>{
-                    if(err) throw new Error('JWT_DECODE_ERROR')
+                    if(err) throw ({message:'JWT_DECODE_ERROR', status: 401})
 
                     payload.id = decoded.id
                 })
@@ -22,18 +22,18 @@ module.exports= {
                         req.user = result.id
                         next()
                     }
-                    else throw new Error('INVALID_USER')
+                    else throw ({message:'INVALID_USER', status: 400})
                 })
             
         }
         catch(err){
             if(err.name='TokenExpiredError')return res.status(401).json({message: err.message})
-            else return res.status(400).json({message: err.message})
+            else return res.status(e.status || 400).json({message: err.message})
         }
     },
     refresh_token: async(req, res)=>{
         try{
-            if(!req.headers.refresh_token) throw new Error('KEY_ERROR_REFRESH_TOKEN')
+            if(!req.headers.refresh_token) throw ({message: 'KEY_ERROR_REFRESH_TOKEN', status: 400})
 
             db.User.findOne({where: {refresh_token: req.headers.refresh_token}})
                 .then(result=>{
@@ -43,12 +43,12 @@ module.exports= {
                             token: jwt.sign({id: user.id }, SECRET_KEY, {algorithm:ALGORITHM})
                         })
                     }
-                    else throw new Error('LOGIN_PLEASE')
+                    else throw ({message: 'LOGIN_PLEASE', status: 400})
+
                 })
                 // .catch 안쓴이유 refresh_token 중복값이 있을경우는 아직 더 고민해 봐야함
         }catch(err){
-            return res.status(400).json({message: err.message})
+            return res.status(e.status || 400).json({message: err.message})
         }
     }
-    
 }
