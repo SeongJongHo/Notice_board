@@ -46,7 +46,6 @@ module.exports= {
                     else throw ({message: 'LOGIN_PLEASE', status: 400})
 
                 })
-                // catch 안쓴이유 refresh_token 중복값이 있을경우는 아직 더 고민해 봐야함
         }catch(err){
             return res.status(e.status || 400).json({message: err.message})
         }
